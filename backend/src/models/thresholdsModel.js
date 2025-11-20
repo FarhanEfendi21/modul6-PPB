@@ -11,6 +11,7 @@ function normalize(row) {
 }
 
 export const ThresholdsModel = {
+  // Fungsi LIST dan LATEST tetap sama
   async list() {
     const { data, error } = await supabase
       .from(TABLE)
@@ -34,6 +35,9 @@ export const ThresholdsModel = {
     return normalize(data);
   },
 
+  // ===============================================
+  // UPDATE LOGIKA CREATE: Delete semua, lalu Insert baru
+  // ===============================================
   async create(payload) {
     const { value, note } = payload;
 
@@ -46,13 +50,40 @@ export const ThresholdsModel = {
       note: note?.slice(0, 180) ?? null,
     };
 
-    const { data, error } = await supabase
+    // 1. Hapus SEMUA baris yang ada di tabel
+    const { error: deleteError } = await supabase
+      .from(TABLE)
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000"); // Hapus semua
+
+    if (deleteError) throw deleteError;
+
+    // 2. Masukkan satu baris yang baru
+    const { data, error: insertError } = await supabase
       .from(TABLE)
       .insert(row)
       .select("id, value, note, created_at")
       .single();
 
-    if (error) throw error;
+    if (insertError) throw insertError;
     return normalize(data);
+  },
+  // ===============================================
+
+  // ===============================================
+  // FUNGSI DELETE (Yang dibutuhkan Controller)
+  // ===============================================
+  async delete(id) {
+    if (!id) {
+      throw new Error("ID is required for deletion.");
+    }
+
+    const { error } = await supabase
+      .from(TABLE)
+      .delete()
+      .match({ id: id }); // Hapus baris berdasarkan ID
+
+    if (error) throw error;
+    return { message: `Threshold with ID ${id} deleted.` };
   },
 };

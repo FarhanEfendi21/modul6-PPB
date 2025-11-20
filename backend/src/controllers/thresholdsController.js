@@ -27,4 +27,15 @@ export const ThresholdsController = {
       res.status(400).json({ error: error.message });
     }
   },
+
+  // Fungsi ini sekarang sudah ada dan siap dipanggil oleh Router
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const result = await ThresholdsModel.delete(id);
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 };

@@ -13,16 +13,24 @@ function normalize(row) {
 }
 
 export const ReadingsModel = {
-  async list() {
+  // ===========================================
+  // PERUBAHAN: Menambahkan Pagination (Page & Limit)
+  // ===========================================
+  async list(page = 1, limit = 10) {
+    // Hitung rentang data (Supabase menggunakan index 0)
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     const { data, error } = await supabase
       .from(TABLE)
       .select("id, temperature, threshold_value, recorded_at")
       .order("recorded_at", { ascending: false })
-      .limit(100);
+      .range(from, to); // Ambil data dari index 'from' sampai 'to'
 
     if (error) throw error;
     return data.map(normalize);
   },
+  // ===========================================
 
   async latest() {
     const { data, error } = await supabase
